@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image Processing</title>
+</head>
+<body>
+    <h1>Upload an Image</h1>
+    <form method="post" enctype="multipart/form-data" action="{% url 'process_image' %}">
+        {% csrf_token %}
+        <input type="file" name="image">
+        <input type="submit" value="Upload">
+    </form>
+    
+    <!-- Display the uploaded image -->
+    <h2>Uploaded Image</h2>
+    <img id="uploadedImage" src="" alt="Uploaded Image">
+    
+    <h2>Process the Image</h2>
+    <form id="processForm">
+        <input type="hidden" id="imageResult" name="imageResult">
+        <input type="button" value="Process" onclick="processImage()">
+    </form>
+    <div id="resultDiv"></div>
+
+    <script>
+        // JavaScript function to process the image
+        function processImage() {
+            var formData = new FormData();
+            formData.append('image', document.querySelector('input[type="file"]').files[0]);
+
+            fetch("{% url 'process_image' %}", {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('input[name="csrfmiddlewaretoken"]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Display the result as JSON
+                document.getElementById("resultDiv").innerText = JSON.stringify(data, null, 4);
+                document.getElementById("imageResult").value = JSON.stringify(data);
+
+                // Display the uploaded image
+                document.getElementById("uploadedImage").src = URL.createObjectURL(formData.get('image'));
+            })
+            .catch(error => {
+                console.error("Error processing the image:", error);
+                document.getElementById("resultDiv").innerText = "Error processing the image.";
+            });
+        }
+    </script>
+</body>
+</html>
